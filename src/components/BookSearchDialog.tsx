@@ -3,6 +3,7 @@ import { BookDescription } from "../types/Book";
 import BookSearchItem from "./BookSearchItem";
 import { Button, Input } from "@mui/material";
 import styled from "@emotion/styled";
+import useBookData from "../hooks/useBookData";
 
 interface Props {
   maxResults: number;
@@ -20,7 +21,6 @@ const Container = styled.div`
 `;
 
 const InputArea = styled.div`
-  padding: 20px;
   min-width: 60%;
   display: flex;
   flex-direction: column;
@@ -28,6 +28,7 @@ const InputArea = styled.div`
 `;
 
 const SearchArea = styled.div`
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -42,41 +43,14 @@ const Results = styled.div`
   background-color: #efefef;
 `;
 
-// 検索URLを生成する
-const buildSearchUrl = (
-  title: string,
-  author: string,
-  maxResults: number
-): string => {
-  const url = "https://www.googleapis.com/books/v1/volumes?q=";
-  const conditions: string[] = [];
-
-  title && conditions.push(`initile:${title}`);
-  author && conditions.push(`inauthor: ${author}`);
-
-  return url + conditions.join("+") + `&maxResults=${maxResults}`;
-};
-
-// jsonデータを解析する
-const extractBooks = (json: any): BookDescription[] => {
-  const items = json.items;
-  return items.map((item: any) => {
-    const volumeInfo = item.volumeInfo;
-    return {
-      title: volumeInfo.title,
-      authors: volumeInfo.authors ? volumeInfo.authors.join(", ") : "",
-      thumbnail: volumeInfo.imageLinks
-        ? volumeInfo.imageLinks.smallThumbnail
-        : "",
-    };
-  });
-};
-
 const BookSearchDialog = ({ maxResults, onBookAdd }: Props) => {
-  const [books, setBooks] = useState<BookDescription[]>([]);
   const titleRef = useRef<HTMLInputElement>(null);
   const authorRef = useRef<HTMLInputElement>(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const [books, setIsSearching] = useBookData(
+    titleRef.current ? titleRef.current!.value : "",
+    authorRef.current ? authorRef.current!.value : "",
+    maxResults
+  );
 
   const handleBookAdd = (book: BookDescription) => {
     onBookAdd(book);
@@ -90,30 +64,6 @@ const BookSearchDialog = ({ maxResults, onBookAdd }: Props) => {
     // 検索実行
     setIsSearching(true);
   };
-
-  useEffect(() => {
-    if (isSearching) {
-      const url = buildSearchUrl(
-        titleRef.current!.value,
-        authorRef.current!.value,
-        maxResults
-      );
-      fetch(url)
-        .then((res) => {
-          return res.json();
-        })
-        .then((json) => {
-          return extractBooks(json);
-        })
-        .then((books) => {
-          setBooks(books);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-    setIsSearching(false);
-  }, [isSearching]);
 
   return (
     <Container>
