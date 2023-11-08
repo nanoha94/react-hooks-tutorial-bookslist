@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BookDescription } from "../types/Book";
 import BookSearchItem from "./BookSearchItem";
-import { TextField, Button } from "@mui/material";
+import { Button, Input } from "@mui/material";
 import styled from "@emotion/styled";
 
 interface Props {
@@ -74,24 +74,16 @@ const extractBooks = (json: any): BookDescription[] => {
 
 const BookSearchDialog = ({ maxResults, onBookAdd }: Props) => {
   const [books, setBooks] = useState<BookDescription[]>([]);
-  const [title, setTitle] = useState<string>("");
-  const [author, setAuthor] = useState<string>("");
+  const titleRef = useRef<HTMLInputElement>(null);
+  const authorRef = useRef<HTMLInputElement>(null);
   const [isSearching, setIsSearching] = useState(false);
-
-  const handleTitleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-  };
-
-  const handleAuthorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAuthor(e.target.value);
-  };
 
   const handleBookAdd = (book: BookDescription) => {
     onBookAdd(book);
   };
 
   const handleSearchClick = () => {
-    if (!title && !author) {
+    if (!titleRef.current!.value && !authorRef.current!.value) {
       alert("条件を入力してください");
       return;
     }
@@ -101,7 +93,11 @@ const BookSearchDialog = ({ maxResults, onBookAdd }: Props) => {
 
   useEffect(() => {
     if (isSearching) {
-      const url = buildSearchUrl(title, author, maxResults);
+      const url = buildSearchUrl(
+        titleRef.current!.value,
+        authorRef.current!.value,
+        maxResults
+      );
       fetch(url)
         .then((res) => {
           return res.json();
@@ -123,22 +119,8 @@ const BookSearchDialog = ({ maxResults, onBookAdd }: Props) => {
     <Container>
       <SearchArea>
         <InputArea>
-          <TextField
-            type="text"
-            label="タイトルで検索"
-            variant="outlined"
-            size="small"
-            value={title}
-            onChange={handleTitleInputChange}
-          />
-          <TextField
-            type="text"
-            label="著者名で検索"
-            variant="outlined"
-            size="small"
-            value={author}
-            onChange={handleAuthorInputChange}
-          />
+          <Input inputRef={titleRef} type="text" placeholder="タイトルで検索" />
+          <Input ref={authorRef} type="text" placeholder="著者名で検索" />
         </InputArea>
         <Button variant="contained" onClick={handleSearchClick}>
           検索
