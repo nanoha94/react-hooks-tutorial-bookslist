@@ -1,6 +1,6 @@
 # react-hooks-tutorial-bookslist
 
-書籍リストを作成中です。
+書籍リストを作成しました。
 
 参照元：https://zenn.dev/yonekubo/articles/17b22c7b4ee07b23369a
 
